@@ -1,0 +1,251 @@
+// ============================================================
+// Julia Bunyakova CMS — Prisma schema (SQLite, local default)
+// For PostgreSQL/Vercel see prisma/schema.postgres.prisma
+// (swapped automatically by `npm run build:vercel`)
+// ============================================================
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+// ------------------------------------------------------------
+// Users & auth
+// ------------------------------------------------------------
+model User {
+  id                 String   @id @default(cuid())
+  email              String   @unique
+  name               String
+  passwordHash       String
+  role               String   @default("admin")
+  mustChangePassword Boolean  @default(true)
+  lastLoginAt        DateTime?
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+
+  @@map("users")
+}
+
+// ------------------------------------------------------------
+// Gallery
+// ------------------------------------------------------------
+model ArtworkCategory {
+  id        String    @id @default(cuid())
+  slug      String    @unique
+  nameRu    String
+  nameEn    String
+  nameZh    String
+  sortOrder Int       @default(0)
+  artworks  Artwork[]
+
+  @@map("artwork_categories")
+}
+
+model Artwork {
+  id            String           @id @default(cuid())
+  slug          String           @unique
+  imageUrl      String
+  titleRu       String
+  titleEn       String
+  titleZh       String
+  descriptionRu String           @default("")
+  descriptionEn String           @default("")
+  descriptionZh String           @default("")
+  techniqueRu   String           @default("")
+  techniqueEn   String           @default("")
+  techniqueZh   String           @default("")
+  year          Int
+  widthCm       Float?
+  heightCm      Float?
+  categoryId    String?
+  category      ArtworkCategory? @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+  published     Boolean          @default(true)
+  sortOrder     Int              @default(0)
+  views         Int              @default(0)
+  seoTitleRu    String?
+  seoTitleEn    String?
+  seoTitleZh    String?
+  seoDescRu     String?
+  seoDescEn     String?
+  seoDescZh     String?
+  createdAt     DateTime         @default(now())
+  updatedAt     DateTime         @updatedAt
+
+  @@index([published, sortOrder])
+  @@map("artworks")
+}
+
+// ------------------------------------------------------------
+// Blog
+// ------------------------------------------------------------
+model BlogPost {
+  id          String    @id @default(cuid())
+  slug        String    @unique
+  imageUrl    String
+  titleRu     String
+  titleEn     String
+  titleZh     String
+  excerptRu   String    @default("")
+  excerptEn   String    @default("")
+  excerptZh   String    @default("")
+  bodyRu      String    @default("")
+  bodyEn      String    @default("")
+  bodyZh      String    @default("")
+  categoryRu  String    @default("")
+  categoryEn  String    @default("")
+  categoryZh  String    @default("")
+  status      String    @default("published") // draft | published
+  publishedAt DateTime  @default(now())
+  views       Int       @default(0)
+  seoTitleRu  String?
+  seoTitleEn  String?
+  seoTitleZh  String?
+  seoDescRu   String?
+  seoDescEn   String?
+  seoDescZh   String?
+  comments    Comment[]
+  likes       Like[]
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@index([status, publishedAt])
+  @@map("blog_posts")
+}
+
+model Comment {
+  id         String   @id @default(cuid())
+  postId     String
+  post       BlogPost @relation(fields: [postId], references: [id], onDelete: Cascade)
+  authorName String
+  content    String
+  status     String   @default("pending") // pending | approved | rejected
+  ipHash     String   @default("")
+  createdAt  DateTime @default(now())
+
+  @@index([postId, status])
+  @@map("comments")
+}
+
+model Like {
+  id        String   @id @default(cuid())
+  postId    String
+  post      BlogPost @relation(fields: [postId], references: [id], onDelete: Cascade)
+  visitorId String
+  ipHash    String   @default("")
+  createdAt DateTime @default(now())
+
+  @@unique([postId, visitorId])
+  @@map("likes")
+}
+
+// ------------------------------------------------------------
+// Analytics
+// ------------------------------------------------------------
+model Visitor {
+  id             String     @id @default(cuid())
+  country        String     @default("Unknown")
+  device         String     @default("desktop") // desktop | mobile | tablet
+  os             String     @default("Unknown")
+  browser        String     @default("Unknown")
+  referrerType   String     @default("direct") // direct | search | social | external | campaign
+  referrerSource String     @default("")
+  userAgent      String     @default("")
+  firstSeenAt    DateTime   @default(now())
+  lastSeenAt     DateTime   @default(now())
+  pageViews      PageView[]
+
+  @@index([firstSeenAt])
+  @@map("visitors")
+}
+
+model PageView {
+  id        String   @id @default(cuid())
+  visitorId String
+  visitor   Visitor  @relation(fields: [visitorId], references: [id], onDelete: Cascade)
+  path      String
+  kind      String   @default("page") // page | artwork | post
+  entityId  String?
+  duration  Int      @default(0) // seconds spent, reported via beacon
+  createdAt DateTime @default(now())
+
+  @@index([createdAt])
+  @@index([kind, entityId])
+  @@map("analytics")
+}
+
+// ------------------------------------------------------------
+// Content & settings
+// ------------------------------------------------------------
+model SocialLink {
+  id        String  @id @default(cuid())
+  platform  String  // instagram | facebook | vk | youtube | tiktok | telegram | wechat | xiaohongshu | custom
+  label     String
+  url       String
+  active    Boolean @default(true)
+  sortOrder Int     @default(0)
+
+  @@map("social_links")
+}
+
+model BiographyEntry {
+  id        String @id @default(cuid())
+  section   String // bio | path | philosophy | quote | exhibition | achievement | publication
+  locale    String // ru | en | zh
+  title     String @default("")
+  content   String @default("")
+  meta      String @default("") // e.g. exhibition year
+  sortOrder Int    @default(0)
+
+  @@index([section, locale])
+  @@map("biography")
+}
+
+model SiteSetting {
+  key       String   @id
+  value     String
+  updatedAt DateTime @updatedAt
+
+  @@map("site_settings")
+}
+
+model Translation {
+  id     String @id @default(cuid())
+  locale String
+  key    String
+  value  String
+
+  @@unique([locale, key])
+  @@map("translations")
+}
+
+model SeoSetting {
+  id              String  @id @default(cuid())
+  page            String  // home | gallery | about | blog | contacts
+  locale          String  // ru | en | zh
+  metaTitle       String  @default("")
+  metaDescription String  @default("")
+  ogTitle         String  @default("")
+  ogDescription   String  @default("")
+  ogImage         String  @default("")
+  keywords        String  @default("")
+
+  @@unique([page, locale])
+  @@map("seo_settings")
+}
+
+model UploadedFile {
+  id        String   @id @default(cuid())
+  filename  String
+  url       String
+  mimeType  String   @default("")
+  size      Int      @default(0)
+  folder    String   @default("general")
+  createdAt DateTime @default(now())
+
+  @@index([folder])
+  @@map("uploaded_files")
+}

@@ -1,0 +1,89 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --font-serif: 'Cormorant Garamond', 'Noto Serif SC', Georgia, serif;
+  --font-sans: 'Manrope', 'Noto Sans SC', system-ui, -apple-system, sans-serif;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  @apply bg-paper text-ink font-sans antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+::selection {
+  @apply bg-gold/30;
+}
+
+/* ---------- premium scrollbar ---------- */
+::-webkit-scrollbar { width: 10px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { @apply bg-line rounded-full; }
+.dark-scroll::-webkit-scrollbar-thumb { background: #2c3440; }
+
+/* ---------- masonry gallery (CSS columns keep natural aspect ratios) ---------- */
+.masonry {
+  column-count: 1;
+  column-gap: 28px;
+}
+@media (min-width: 640px)  { .masonry { column-count: 2; } }
+@media (min-width: 1024px) { .masonry { column-count: 3; } }
+@media (min-width: 1440px) { .masonry { column-count: 4; } }
+.masonry-item {
+  break-inside: avoid;
+  margin-bottom: 28px;
+}
+
+/* ---------- reveal-on-scroll ---------- */
+.reveal {
+  opacity: 0;
+  transform: translateY(28px);
+  transition: opacity 0.9s cubic-bezier(0.22, 1, 0.36, 1), transform 0.9s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.reveal.is-visible {
+  opacity: 1;
+  transform: none;
+}
+
+/* ---------- prose for blog bodies ---------- */
+.prose-art p {
+  @apply text-ink-soft leading-relaxed mb-6 text-[1.06rem];
+}
+.prose-art p:first-of-type::first-letter {
+  @apply font-serif text-6xl float-left mr-3 mt-1 leading-[0.8] text-gold-deep;
+}
+
+/* ---------- hairline divider with gold dot ---------- */
+.hairline {
+  @apply relative h-px bg-line;
+}
+.hairline::after {
+  content: '';
+  @apply absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-1.5 h-1.5 rotate-45 bg-gold;
+}
+
+/* ---------- admin dark inputs ---------- */
+.adm-input {
+  @apply w-full bg-night-soft border border-night-line rounded-lg px-3.5 py-2.5 text-sm text-gray-200 placeholder-gray-500 outline-none focus:border-gold/60 transition-colors;
+}
+.adm-label {
+  @apply block text-[11px] uppercase tracking-widest text-mist mb-1.5;
+}
+.adm-btn {
+  @apply inline-flex items-center justify-center gap-2 rounded-lg bg-gold text-night font-semibold text-sm px-4 py-2.5 hover:bg-gold/90 active:scale-[0.98] transition disabled:opacity-50 disabled:pointer-events-none;
+}
+.adm-btn-ghost {
+  @apply inline-flex items-center justify-center gap-2 rounded-lg border border-night-line text-gray-300 text-sm px-4 py-2.5 hover:bg-night-soft transition;
+}
+.adm-card {
+  @apply bg-night-card border border-night-line rounded-2xl;
+}
+
+/* hide number input arrows in admin */
+.adm-input::-webkit-outer-spin-button,
+.adm-input::-webkit-inner-spin-button { -webkit-appearance: none; }
