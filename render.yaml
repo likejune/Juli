@@ -1,0 +1,29 @@
+services:
+
+* type: web
+  name: julia-bunyakova-cms
+  runtime: node
+  plan: free
+
+  buildCommand: |
+  npm ci
+  npm run build:vercel
+
+  startCommand: npm start
+
+  envVars:
+
+  * key: DATABASE_URL
+    sync: false
+
+  * key: SESSION_SECRET
+    generateValue: true
+
+  * key: NEXT_PUBLIC_SUPABASE_URL
+    sync: false
+
+  * key: NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY
+    sync: false
+
+  * key: NEXT_PUBLIC_SITE_URL
+    sync: false
