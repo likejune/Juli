@@ -9,7 +9,7 @@ services:
     npm ci
     npm run build:vercel
   
-    startCommand: npm start
+  startCommand: npm start
   
     envVars:
   
